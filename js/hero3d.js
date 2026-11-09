@@ -9,19 +9,20 @@ function hasWebGL() { try { const c = document.createElement('canvas'); return !
 async function init() {
   if (!canvas) return;
   if (!hasWebGL()) return fallback('WebGL no disponible');
-  let THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, RenderPass, UnrealBloomPass, OutputPass;
+  let THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, MeshSurfaceSampler;
   try {
     THREE = await import('three');
-    [{ RoomEnvironment }, { RoundedBoxGeometry }, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+    [{ RoomEnvironment }, { RoundedBoxGeometry }, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }, { MeshSurfaceSampler }] = await Promise.all([
       import('three/addons/environments/RoomEnvironment.js'), import('three/addons/geometries/RoundedBoxGeometry.js'),
       import('three/addons/postprocessing/EffectComposer.js'), import('three/addons/postprocessing/RenderPass.js'),
-      import('three/addons/postprocessing/UnrealBloomPass.js'), import('three/addons/postprocessing/OutputPass.js')]);
+      import('three/addons/postprocessing/UnrealBloomPass.js'), import('three/addons/postprocessing/OutputPass.js'),
+      import('three/addons/postprocessing/ShaderPass.js'), import('three/addons/math/MeshSurfaceSampler.js')]);
   } catch (e) { return fallback('no se pudo cargar Three.js'); }
-  try { build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, RenderPass, UnrealBloomPass, OutputPass }); }
+  try { build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, MeshSurfaceSampler }); }
   catch (e) { fallback('error al iniciar la escena: ' + e.message); }
 }
 
-function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, RenderPass, UnrealBloomPass, OutputPass }) {
+function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, MeshSurfaceSampler }) {
   const mobile = () => innerWidth < 800;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
   if (!renderer.getContext()) throw new Error('sin contexto');
@@ -57,7 +58,7 @@ function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, Ren
   const bodyGeo = new THREE.ExtrudeGeometry(shape, { depth: D, bevelEnabled: true, bevelThickness: .07, bevelSize: .07, bevelSegments: 8, curveSegments: 48 });
   bodyGeo.translate(0, 0, -D / 2);
   const bodyMat = new THREE.MeshPhysicalMaterial({ color: 0x0b1426, metalness: .75, roughness: .26, clearcoat: 1, clearcoatRoughness: .12, iridescence: .25, iridescenceIOR: 1.4, envMapIntensity: .55 });
-  key.add(new THREE.Mesh(bodyGeo, bodyMat));
+  const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat); key.add(bodyMesh);
   const face = new THREE.Mesh(new THREE.PlaneGeometry(W * .95, H * .95), new THREE.MeshBasicMaterial({ map: decal, transparent: true, depthWrite: false }));
   face.position.z = D / 2 + .071; key.add(face);
   const gold = new THREE.MeshPhysicalMaterial({ color: 0xd9a74a, metalness: 1, roughness: .22, clearcoat: .5 });
@@ -70,6 +71,26 @@ function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, Ren
   const keyring = new THREE.Mesh(new THREE.TorusGeometry(.62, .045, 20, 120), silver); keyring.position.set(0, H / 2 + .05, 0); keyring.rotation.y = Math.PI / 2.4; key.add(keyring);
   const led = new THREE.Mesh(new THREE.CircleGeometry(.05, 24), new THREE.MeshBasicMaterial({ color: 0x29f0a6 })); led.position.set(0, -.9, D / 2 + .075); key.add(led);
   key.scale.setScalar(innerWidth < 800 ? .62 : .82);
+  const solids = []; key.traverse(o => { if (o.isMesh) { o.material.transparent = true; solids.push(o); } });
+  solids.forEach(o => o.userData.baseOpacity = o.material.opacity);
+
+  // ---------- explosión: partículas muestreadas de la superficie + wireframe ----------
+  const EN = mobile() ? 2200 : 5000, ePos = new Float32Array(EN * 3), eDir = new Float32Array(EN * 3), eSeed = new Float32Array(EN);
+  const sampler = new MeshSurfaceSampler(bodyMesh).build(), tmp = new THREE.Vector3();
+  for (let i = 0; i < EN; i++) {
+    sampler.sample(tmp); ePos.set([tmp.x, tmp.y, tmp.z], i * 3);
+    const d = tmp.clone().setZ(tmp.z * 4).normalize().add(new THREE.Vector3().randomDirection().multiplyScalar(.6)).normalize().multiplyScalar(1.5 + Math.random() * 3.5);
+    eDir.set([d.x, d.y, d.z], i * 3); eSeed[i] = Math.random();
+  }
+  const eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.BufferAttribute(ePos, 3)); eg.setAttribute('dir', new THREE.BufferAttribute(eDir, 3)); eg.setAttribute('seed', new THREE.BufferAttribute(eSeed, 1));
+  const eMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { ex: { value: 0 }, time: { value: 0 }, px: { value: renderer.getPixelRatio() } },
+    vertexShader: `attribute vec3 dir;attribute float seed;uniform float ex,time,px;varying float a;varying float s;
+      void main(){ float e=smoothstep(0.,1.,ex); vec3 p=position+dir*e+vec3(sin(time*2.+seed*30.),cos(time*1.7+seed*20.),sin(time*1.3+seed*10.))*.12*e;
+        vec4 mv=modelViewMatrix*vec4(p,1.); a=smoothstep(0.,.08,ex)*(.5+.5*seed); s=seed; gl_PointSize=px*(1.5+seed*2.5)*(7./-mv.z); gl_Position=projectionMatrix*mv; }`,
+    fragmentShader: `varying float a;varying float s;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;vec3 c=mix(vec3(.2,.6,1.),vec3(.7,1.,1.),s);gl_FragColor=vec4(c,a*(1.-d*2.));}` });
+  const ePts = new THREE.Points(eg, eMat); ePts.frustumCulled = false; key.add(ePts);
+  const wire = new THREE.LineSegments(new THREE.EdgesGeometry(bodyGeo, 20), new THREE.LineBasicMaterial({ color: 0x3ee6ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+  key.add(wire);
 
   // halo + shield
   const halo = new THREE.Mesh(new THREE.TorusGeometry(2.1, .012, 16, 200), new THREE.MeshBasicMaterial({ color: 0x00a3ff, transparent: true, opacity: .8 })); scene.add(halo);
@@ -86,14 +107,14 @@ function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, Ren
   for (let i = 0; i < N; i++) { const v = new THREE.Vector3().randomDirection(); const r = 4 + Math.random() * 7; pos.set([v.x * r, v.y * r * .7, v.z * r], i * 3); seed[i] = Math.random(); }
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('seed', new THREE.BufferAttribute(seed, 1));
   const pMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { time: { value: 0 }, attack: { value: 0 }, shieldK: { value: 0 }, px: { value: renderer.getPixelRatio() } },
-    vertexShader: `attribute float seed;uniform float time,attack,shieldK,px;varying vec3 col;varying float a;
+    uniforms: { time: { value: 0 }, attack: { value: 0 }, shieldK: { value: 0 }, px: { value: renderer.getPixelRatio() }, mouse: { value: new THREE.Vector3(99, 99, 0) }, mk: { value: 0 } },
+    vertexShader: `attribute float seed;uniform float time,attack,shieldK,px,mk;uniform vec3 mouse;varying vec3 col;varying float a;
       void main(){ vec3 p=position; float r=length(p); vec3 dir=normalize(p);
         float ang=time*(.05+seed*.08); mat2 rot=mat2(cos(ang),-sin(ang),sin(ang),cos(ang)); p.xz=rot*p.xz; dir=normalize(p);
         float inR=mix(r, 1.4+seed*.8, attack*(1.-shieldK)); float outR=2.75+seed*.12+sin(time*2.+seed*40.)*.03;
         float fr=mix(inR,outR,shieldK*step(.35,seed)); fr=mix(fr, r+2.5, shieldK*(1.-step(.35,seed)));
-        p=dir*fr; vec4 mv=modelViewMatrix*vec4(p,1.);
-        col=mix(vec3(.25,.55,1.), vec3(1.,.22,.33), attack*(1.-shieldK)); col=mix(col, vec3(.25,.9,1.), shieldK);
+        p=dir*fr; vec3 dm=p-mouse; float md=length(dm.xy); float f=smoothstep(2.4,0.,md)*mk; p+=normalize(vec3(dm.xy,.2))*f*1.6; vec4 mv=modelViewMatrix*vec4(p,1.);
+        col=mix(vec3(.25,.55,1.), vec3(1.,.22,.33), attack*(1.-shieldK)); col=mix(col, vec3(.25,.9,1.), shieldK); col+=vec3(.3,.6,.8)*f;
         a=.35+.65*fract(seed*7.+time*.2);
         gl_PointSize=px*(1.+seed*1.8)*(1.+attack*.5)*(7./-mv.z); gl_Position=projectionMatrix*mv; }`,
     fragmentShader: `varying vec3 col;varying float a;void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(col,a*(1.-d*2.));}` });
@@ -106,10 +127,23 @@ function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, Ren
   scene.add(new THREE.AmbientLight(0x223355, .6));
 
   // post
-  let composer = null, bloom = null;
+  let composer = null, bloom = null, post = null, glitch = 0;
+  addEventListener('hero:chapter', () => { glitch = 1; });
   if (!mobile()) try {
     composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
     bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .7, .5, .5); composer.addPass(bloom); composer.addPass(new OutputPass());
+    post = new ShaderPass({ uniforms: { tDiffuse: { value: null }, time: { value: 0 }, glitch: { value: 0 }, ca: { value: .0018 } },
+      vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+      fragmentShader: `uniform sampler2D tDiffuse;uniform float time,glitch,ca;varying vec2 vUv;
+        float h(float n){return fract(sin(n)*43758.5453);}
+        void main(){ vec2 uv=vUv; vec2 c=uv-.5; float r=dot(c,c);
+          float band=floor(uv.y*18.+floor(time*24.)); float g=step(1.-glitch*.5,h(band))*glitch; uv.x+=(h(band+3.)-.5)*.12*g;
+          float k=ca*(1.+r*4.)+glitch*.012;
+          vec3 col=vec3(texture2D(tDiffuse,uv+c*k).r,texture2D(tDiffuse,uv).g,texture2D(tDiffuse,uv-c*k).b);
+          col+= (h(uv.x*913.+uv.y*577.+fract(time)*100.)-.5)*.045;
+          col*=1.-smoothstep(.25,.9,r)*.35; col+=vec3(0.,.15,.3)*g;
+          gl_FragColor=vec4(col,1.); }` });
+    composer.addPass(post);
   } catch { composer = null; }
 
   // keyframes [p, cam, target, keyPos, keyRot, attack, shield]
@@ -142,6 +176,8 @@ function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, Ren
   addEventListener('site:ready', () => { if (!intro) intro = .001; }); setTimeout(() => { if (!intro) intro = .001; }, 3000);
   const progress = () => { const r = heroEl.getBoundingClientRect(), span = r.height - innerHeight; return span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0; };
   const clock = new THREE.Clock();
+  const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), mWorld = new THREE.Vector3(99, 99, 0), ndc = new THREE.Vector2();
+  let lastMove = 0; addEventListener('pointermove', () => lastMove = performance.now(), { passive: true });
 
   function render(dt) {
     const t = clock.elapsedTime;
@@ -164,6 +200,16 @@ function build({ THREE, RoomEnvironment, RoundedBoxGeometry, EffectComposer, Ren
     led.material.color.setHex(s.attack > .5 && s.shield < .5 ? (Math.sin(t * 12) > 0 ? 0xff3b5c : 0x330000) : 0x29f0a6);
     redL.intensity = s.attack * (1 - s.shield) * 40 * (.7 + .3 * Math.sin(t * 10));
     pMat.uniforms.time.value = t; pMat.uniforms.attack.value = s.attack; pMat.uniforms.shieldK.value = s.shield;
+    // ratón -> mundo (plano z=0) para repeler partículas
+    ndc.set(mx * 2, -my * 2); ray.setFromCamera(ndc, camera); if (ray.ray.intersectPlane(plane, mWorld)) pMat.uniforms.mouse.value.copy(mWorld);
+    const moving = performance.now() - lastMove < 1200 ? 1 : 0; pMat.uniforms.mk.value += (moving - pMat.uniforms.mk.value) * .06;
+    // explosión entre "amenaza" y "escudo"
+    const ex = reduce ? 0 : Math.min(1, Math.max(0, (pp - .34) / .1)) * (1 - Math.min(1, Math.max(0, (pp - .47) / .1)));
+    eMat.uniforms.ex.value = ex; eMat.uniforms.time.value = t;
+    const solidK = 1 - Math.min(1, ex * 1.6); solids.forEach(o => { o.material.opacity = o.userData.baseOpacity * solidK; o.visible = solidK > .01; });
+    face.material.opacity = solidK; wire.material.opacity = Math.sin(Math.min(1, ex * 1.3) * Math.PI) * .9 + (1 - solidK) * .15;
+    wire.scale.setScalar(1 + ex * .25);
+    glitch *= Math.pow(.02, dt); if (post) { post.uniforms.time.value = t; post.uniforms.glitch.value = glitch; post.uniforms.ca.value = .0015 + s.attack * (1 - s.shield) * .003 + ex * .006; }
     if (bloom) bloom.strength = .6 + s.shield * .15 + s.attack * .15;
     composer ? composer.render() : renderer.render(scene, camera);
   }

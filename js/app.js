@@ -1,6 +1,8 @@
 import { PRODUCTS, COURSES, BUNDLES } from './data.js';
 import { productArt, courseArt } from './art.js';
 import { initFx } from './fx.js';
+import { initBg } from './bg.js';
+import { initTrail } from './trail.js';
 
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -31,7 +33,20 @@ function scramble(el, dur = 1200, delay = 0) {
   };
   requestAnimationFrame(tick);
 }
-$$('.split').forEach(h => h.innerHTML = h.textContent.trim().split(/\s+/).map(w => `<span class="w"><span>${w}</span></span>`).join(' '));
+$$('.split').forEach(h => {
+  h.setAttribute('aria-label', h.textContent.trim());
+  h.innerHTML = h.textContent.trim().split(/\s+/).map(w => `<span class="w" aria-hidden="true">${[...w].map(c => `<span class="c" data-c="${c}">${c}</span>`).join('')}</span>`).join(' ');
+});
+function decodeChars(h, dur = 900) {
+  const cs = $$('.c', h); if (reduce) return;
+  const t0 = performance.now();
+  const tick = now => {
+    const p = (now - t0) / dur; let done = true;
+    cs.forEach((c, i) => { const at = i / cs.length * .8; if (p < at + .2) { done = false; c.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0]; } else c.textContent = c.dataset.c; });
+    if (!done) requestAnimationFrame(tick); else cs.forEach(c => c.textContent = c.dataset.c);
+  };
+  requestAnimationFrame(tick);
+}
 
 /* ---------------- Lenis ---------------- */
 let lenis = null;
@@ -43,21 +58,48 @@ if (!reduce && window.Lenis) {
 const scrollToEl = t => lenis ? lenis.scrollTo(t, { offset: -90 }) : t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
 const lock = on => { document.body.classList.toggle('locked', on); lenis && (on ? lenis.stop() : lenis.start()); };
 
-/* ---------------- Preloader + intro ---------------- */
-const pre = $('.preloader'); let lp = 0;
-const pt = setInterval(() => {
-  lp = Math.min(100, lp + Math.random() * 20 + 8); $('.preloader__pct').textContent = lp | 0; $('.preloader__bar span').style.width = lp + '%';
-  if (lp >= 100) { clearInterval(pt); setTimeout(intro, 150); }
-}, reduce ? 5 : 80);
-function intro() {
+/* ---------------- Intro "hacker" (una vez por sesión, saltable) + preloader ---------------- */
+const pre = $('.preloader');
+let seen = false; try { seen = sessionStorage.getItem('ciphera_intro') === '1'; } catch {}
+const fullIntro = !seen && !reduce && hasG;
+let introDone = false;
+const INTRO = [['dim', '> ciphera://boot --secure --region=eu'], ['ok', '[ OK ] Cargando módulos criptográficos AES-256'], ['ok', '[ OK ] Handshake TLS 1.3 verificado'], ['warn', '[WARN] 3 intentos de intrusión detectados'], ['ok', '[ OK ] Amenazas neutralizadas en 0,04 s'], ['ok', '[ OK ] Catálogo descifrado: 9 productos · 6 cursos'], ['hi', '> ejecutando ciphera_store.exe']];
+function finishIntro() {
+  if (introDone) return; introDone = true;
+  try { sessionStorage.setItem('ciphera_intro', '1'); } catch {}
+  removeEventListener('keydown', skipKey);
   if (hasG && !reduce) {
-    G.to(pre, { clipPath: 'inset(0 0 100% 0)', duration: 1, ease: 'expo.inOut', onComplete: () => pre.remove() });
-    G.from('.hero__title .line > span', { yPercent: 110, duration: 1.1, ease: 'expo.out', stagger: .12, delay: .45 });
-    G.from('.chapter--0 .eyebrow, .chapter--0 .hero__lead, .chapter--0 .hero__ctas, .hero__hud', { opacity: 0, y: 30, duration: 1, stagger: .1, delay: .9 });
-    G.from('.nav', { opacity: 0, duration: 1, delay: .6 });
-  } else pre.remove();
-  $$('.hero .scramble').forEach((el, i) => scramble(el, 1300, 500 + i * 250));
+    G.timeline({ onComplete: () => pre.remove() })
+      .to('.intro__granted', { autoAlpha: 1, scale: 1, duration: .25, ease: 'expo.out' })
+      .to(pre, { clipPath: 'polygon(0 0,100% 0,100% 0,0 0)', duration: .9, ease: 'expo.inOut' }, '+=.25');
+    G.from('.hero__title .line > span', { yPercent: 110, rotateX: -60, duration: 1.2, ease: 'expo.out', stagger: .12, delay: .75 });
+    G.from('.chapter--0 .eyebrow, .chapter--0 .hero__lead, .chapter--0 .hero__ctas, .hero__hud', { opacity: 0, y: 30, duration: 1, stagger: .1, delay: 1.1 });
+    G.from('.nav', { opacity: 0, duration: 1, delay: .9 });
+    setTimeout(() => $$('.hero .scramble').forEach((el, i) => scramble(el, 1300, i * 250)), 700);
+  } else { pre.remove(); $$('.hero .scramble').forEach(el => scramble(el)); }
   window.dispatchEvent(new Event('site:ready'));
+}
+const skipKey = e => { if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') finishIntro(); };
+$('.intro__skip').addEventListener('click', finishIntro);
+if (fullIntro) {
+  pre.classList.add('is-intro'); addEventListener('keydown', skipKey); pre.addEventListener('click', finishIntro);
+  const box = $('#intro-lines'); let i = 0;
+  const typeLine = () => {
+    if (introDone) return;
+    if (i >= INTRO.length) { setTimeout(finishIntro, 350); return; }
+    const [cls, txt] = INTRO[i++], d = document.createElement('div'); d.className = cls; box.appendChild(d);
+    let k = 0; const ty = () => { if (introDone) return; k += 3; d.textContent = txt.slice(0, k) + (k < txt.length ? '█' : ''); if (k < txt.length) setTimeout(ty, 12); else setTimeout(typeLine, 120); };
+    ty();
+  };
+  setTimeout(typeLine, 250);
+  setTimeout(finishIntro, 9000);
+} else {
+  $('.intro__skip').remove();
+  let lp = 0;
+  const pt = setInterval(() => {
+    lp = Math.min(100, lp + Math.random() * 25 + 15); $('.preloader__pct').textContent = lp | 0; $('.preloader__bar span').style.width = lp + '%';
+    if (lp >= 100) { clearInterval(pt); setTimeout(finishIntro, 100); }
+  }, reduce ? 5 : 60);
 }
 
 /* ---------------- Nav / progress / menu ---------------- */
@@ -102,8 +144,8 @@ function bindInteractive(root = document) {
   $$('.tilt', root).forEach(c => {
     if (c._tilt) return; c._tilt = 1;
     c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-      c.style.setProperty('--x', px * 100 + '%'); c.style.setProperty('--y', py * 100 + '%'); c.style.setProperty('--ry', (px - .5) * 9 + 'deg'); c.style.setProperty('--rx', (.5 - py) * 9 + 'deg'); });
-    c.addEventListener('mouseleave', () => { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); });
+      c.style.setProperty('--x', px * 100 + '%'); c.style.setProperty('--y', py * 100 + '%'); c.style.setProperty('--ry', (px - .5) * 9 + 'deg'); c.style.setProperty('--rx', (.5 - py) * 9 + 'deg'); c.style.setProperty('--px', (px - .5) * 2); c.style.setProperty('--py', (py - .5) * 2); });
+    c.addEventListener('mouseleave', () => { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); c.style.setProperty('--px', 0); c.style.setProperty('--py', 0); });
   });
 }
 $$('.scramble-hover').forEach(el => el.parentElement.addEventListener('mouseenter', () => scramble(el, 700)));
@@ -113,14 +155,28 @@ function toast(html) {
   const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = html; $('#toasts').appendChild(t);
   setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 400); }, 2400);
 }
-function fly(from) {
+function burst(x, y) {
+  for (let i = 0; i < 18; i++) {
+    const d = document.createElement('i'); d.className = 'spark'; document.body.appendChild(d);
+    const a = Math.random() * Math.PI * 2, r = 30 + Math.random() * 50;
+    G.set(d, { x, y, scale: Math.random() * .8 + .4, background: i % 3 ? '#3ee6ff' : (i % 2 ? '#29f0a6' : '#2f6bff') });
+    G.to(d, { x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, opacity: 0, scale: 0, duration: .6 + Math.random() * .4, ease: 'expo.out', onComplete: () => d.remove() });
+  }
+  const ring = document.createElement('i'); ring.className = 'spark-ring'; document.body.appendChild(ring);
+  G.fromTo(ring, { x, y, scale: .2, opacity: 1 }, { scale: 2.6, opacity: 0, duration: .6, ease: 'expo.out', onComplete: () => ring.remove() });
+}
+function fly(from, img) {
   if (reduce || !from || !hasG) return;
-  const a = from.getBoundingClientRect(), b = $('#btn-cart').getBoundingClientRect();
-  const d = document.createElement('div'); d.className = 'fly'; document.body.appendChild(d);
-  G.set(d, { x: a.left + a.width / 2 - 8, y: a.top + a.height / 2 - 8 });
-  G.to(d, { x: b.left + b.width / 2 - 8, duration: .8, ease: 'power1.inOut' });
-  G.to(d, { y: b.top + b.height / 2 - 8, duration: .8, ease: 'back.in(2)', onComplete: () => d.remove() });
-  G.to(d, { scale: .4, duration: .8 });
+  const a = from.getBoundingClientRect(), cartBtn = $('#btn-cart'), b = cartBtn.getBoundingClientRect();
+  const d = document.createElement('div'); d.className = 'fly'; if (img) d.style.backgroundImage = `url("${img}")`; document.body.appendChild(d);
+  const sx = a.left + a.width / 2 - 28, sy = a.top + a.height / 2 - 28, ex = b.left + b.width / 2 - 28, ey = b.top + b.height / 2 - 28;
+  const peak = Math.min(sy, ey) - 140, o = { t: 0 };
+  G.set(d, { x: sx, y: sy, scale: .3, rotate: 0 });
+  G.to(d, { scale: 1, duration: .25, ease: 'back.out(3)' });
+  G.to(o, { t: 1, duration: .85, ease: 'power2.in', onUpdate: () => { const t = o.t, mx = (sx + ex) / 2;
+      G.set(d, { x: (1 - t) ** 2 * sx + 2 * (1 - t) * t * mx + t * t * ex, y: (1 - t) ** 2 * sy + 2 * (1 - t) * t * peak + t * t * ey, rotate: t * 360, scale: 1 - t * .7 }); },
+    onComplete: () => { d.remove(); burst(b.left + b.width / 2, b.top + b.height / 2);
+      G.timeline().to(cartBtn, { scaleX: 1.35, scaleY: .7, duration: .1 }).to(cartBtn, { scaleX: .85, scaleY: 1.25, duration: .12 }).to(cartBtn, { scale: 1, duration: .6, ease: 'elastic.out(1.2,.35)' }); } });
 }
 
 /* ---------------- Wishlist ---------------- */
@@ -142,8 +198,8 @@ const cartSub = () => Object.entries(cart).reduce((s, [id, q]) => s + ALL[id].pr
 function bump(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 function updateCounts() { $('#cart-count').textContent = cartCount(); $('#wish-count').textContent = wish.size; }
 function addToCart(id, q = 1, from) {
-  cart[id] = (cart[id] || 0) + q; store.set('ciphera_cart', cart); renderCart(); fly(from);
-  setTimeout(() => bump($('#cart-count')), reduce ? 0 : 750);
+  cart[id] = (cart[id] || 0) + q; store.set('ciphera_cart', cart); renderCart(); fly(from, ALL[id].img);
+  setTimeout(() => bump($('#cart-count')), reduce ? 0 : 900);
   toast(`<span style="color:var(--ok)">✓</span> ${esc(ALL[id].name)} añadido`);
 }
 function setQty(id, q) { if (q <= 0) delete cart[id]; else cart[id] = q; store.set('ciphera_cart', cart); renderCart(); }
@@ -374,12 +430,16 @@ function route() {
 addEventListener('hashchange', route);
 
 /* ---------------- Scroll animations ---------------- */
+let curChap = 0;
 function scrollAnims() {
-  if (!hasG || reduce || !window.ScrollTrigger) { $$('.reveal').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; }); return; }
+  if (!hasG || reduce || !window.ScrollTrigger) { $$('.reveal').forEach(e => { e.style.opacity = 1; e.style.transform = 'none'; }); $$('.draw').forEach(e => e.classList.add('drawn')); return; }
   G.registerPlugin(ScrollTrigger); window.Flip && G.registerPlugin(Flip);
   // hero story chapters
   const tl = G.timeline({ scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom bottom', scrub: .6,
-    onUpdate: s => { $('.hud__bar span').style.transform = `scaleX(${s.progress})`; $('.hud__n').textContent = '0' + Math.min(4, 1 + Math.floor(s.progress * 4.2)); } } });
+    onUpdate: s => { $('.hud__bar span').style.transform = `scaleX(${s.progress})`;
+      const ch = s.progress < .2 ? 0 : s.progress < .48 ? 1 : s.progress < .74 ? 2 : 3;
+      if (ch !== curChap) { curChap = ch; $('.hud__n').textContent = '0' + (ch + 1); window.dispatchEvent(new CustomEvent('hero:chapter', { detail: ch }));
+        const el = $('.chapter--' + ch); el.classList.remove('glitching'); void el.offsetWidth; el.classList.add('glitching'); } } } });
   tl.to('.chapter--0', { opacity: 0, y: -80, filter: 'blur(10px)', duration: 1 }, .6)
     .fromTo('.chapter--1', { autoAlpha: 0, y: 80 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.4)
     .to('.chapter--1', { autoAlpha: 0, y: -80, filter: 'blur(10px)', duration: 1 }, 2.8)
@@ -387,7 +447,11 @@ function scrollAnims() {
     .to('.chapter--2', { autoAlpha: 0, y: -80, filter: 'blur(10px)', duration: 1 }, 4.8)
     .fromTo('.chapter--3', { autoAlpha: 0, x: 80 }, { autoAlpha: 1, x: 0, duration: 1 }, 5.4)
     .to({}, { duration: 1 });
-  $$('.split').forEach(h => G.from(h.querySelectorAll('.w > span'), { yPercent: 110, duration: 1, ease: 'expo.out', stagger: .05, scrollTrigger: { trigger: h, start: 'top 88%' } }));
+  $$('.split').forEach(h => G.from(h.querySelectorAll('.c'), { opacity: 0, rotateX: -100, yPercent: 60, z: -80, duration: 1, ease: 'expo.out', stagger: .018,
+    scrollTrigger: { trigger: h, start: 'top 88%', onEnter: () => decodeChars(h) } }));
+  $$('.reveal-clip, .cat, .news, .bundle').forEach(el => G.fromTo(el, { clipPath: 'inset(45% 8% 45% 8% round 28px)' }, { clipPath: 'inset(0% 0% 0% 0% round 22px)', duration: 1.3, ease: 'expo.inOut', clearProps: 'clipPath', scrollTrigger: { trigger: el, start: 'top 88%' } }));
+  $$('.section__head .eyebrow').forEach(e => G.from(e, { clipPath: 'inset(0 100% 0 0)', duration: 1, ease: 'expo.out', scrollTrigger: { trigger: e, start: 'top 90%' } }));
+  ScrollTrigger.batch('.draw', { start: 'top 90%', once: true, onEnter: b => b.forEach((e, i) => setTimeout(() => e.classList.add('drawn'), i * 150)) });
   $$('.reveal').forEach(e => G.to(e, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: e, start: 'top 90%' } }));
   G.from('.cat', { opacity: 0, y: 80, rotateX: -25, duration: 1.1, stagger: .1, ease: 'power3.out', scrollTrigger: { trigger: '.cats', start: 'top 85%' } });
   ScrollTrigger.batch('.pcard', { start: 'top 92%', once: true, onEnter: b => G.from(b, { opacity: 0, y: 70, rotateX: -15, stagger: .08, duration: .9, ease: 'power3.out', clearProps: 'opacity,transform' }) });
@@ -400,5 +464,7 @@ function scrollAnims() {
 }
 
 /* ---------------- Init ---------------- */
+$$('.draw *').forEach(e => e.setAttribute('pathLength', '1'));
 const fx = initFx({ enabled: fine && !reduce });
+initBg({ reduce }); if (fine && !reduce) initTrail();
 renderCart(); bindInteractive(); fx.bind(document); scrollAnims(); route();
