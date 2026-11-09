@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ciphera · Ciberseguridad para empresas</title>
+<meta name="description" content="Ciberseguridad gestionada: pentesting, SOC 24/7, respuesta a incidentes, protección de endpoints y cumplimiento normativo (RGPD, ENS, NIS2, ISO 27001).">
+<meta name="theme-color" content="#02040a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 2 4 7v8c0 7.5 5 13 12 15 7-2 12-7.5 12-15V7z' fill='%2300a3ff'/></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<!-- ============================================================
+     MARCA: cambia el nombre en js/config.js (SITE.brand) — se
+     aplica a todos los elementos con [data-brand].
+     Datos de contacto y testimonios = CONTENIDO DE EJEMPLO.
+     ============================================================ -->
+<div class="preloader" aria-hidden="true">
+  <div class="preloader__inner">
+    <svg class="preloader__shield" viewBox="0 0 64 64"><path d="M32 4 8 14v16c0 15 10 26 24 30 14-4 24-15 24-30V14z"/></svg>
+    <p class="mono preloader__text">INICIANDO PROTOCOLO SEGURO<span class="preloader__pct">0</span>%</p>
+    <div class="preloader__bar"><span></span></div>
+  </div>
+</div>
+
+<div class="cursor" aria-hidden="true"><div class="cursor__dot"></div><div class="cursor__ring"></div></div>
+<div class="noise" aria-hidden="true"></div>
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<a class="skip" href="#main">Saltar al contenido</a>
+
+<header class="nav" id="nav">
+  <a href="#top" class="nav__logo" aria-label="Inicio">
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M16 2 4 7v8c0 7.5 5 13 12 15 7-2 12-7.5 12-15V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m11 16 4 4 7-8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    <span data-brand>Ciphera</span>
+  </a>
+  <nav class="nav__links" aria-label="Principal">
+    <a href="#servicios">Servicios</a>
+    <a href="#soc">SOC en vivo</a>
+    <a href="#proceso">Proceso</a>
+    <a href="#cumplimiento">Cumplimiento</a>
+    <a href="#contacto">Contacto</a>
+  </nav>
+  <div class="nav__status mono"><span class="pulse-dot"></span>SOC ACTIVO</div>
+  <a href="#contacto" class="btn btn--sm magnetic"><span>Auditoría gratis</span></a>
+  <button class="nav__burger" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
+</header>
+<div class="mobile-menu" aria-hidden="true">
+  <a href="#servicios">Servicios</a><a href="#soc">SOC en vivo</a><a href="#proceso">Proceso</a><a href="#cumplimiento">Cumplimiento</a><a href="#contacto">Contacto</a>
+</div>
+
+<main id="main">
+<!-- HERO -->
+<section class="hero" id="top">
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+  <div class="hero__grid" aria-hidden="true"></div>
+  <div class="hero__vignette" aria-hidden="true"></div>
+  <div class="hero__content">
+    <p class="eyebrow mono reveal-up"><span class="pulse-dot"></span> Ciberseguridad gestionada · 24/7/365</p>
+    <h1 class="hero__title">
+      <span class="line"><span class="scramble" data-text="Detectamos.">Detectamos.</span></span>
+      <span class="line"><span class="scramble" data-text="Bloqueamos.">Bloqueamos.</span></span>
+      <span class="line"><span class="scramble grad" data-text="Te blindamos.">Te blindamos.</span></span>
+    </h1>
+    <p class="hero__lead reveal-up">Pentesting, SOC 24/7 y respuesta a incidentes para empresas que no pueden permitirse parar. Nos adelantamos al atacante antes de que llegue a tu red.</p>
+    <div class="hero__ctas reveal-up">
+      <a href="#contacto" class="btn magnetic"><span>Solicitar auditoría</span><svg viewBox="0 0 24 24" width="18" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none"/></svg></a>
+      <a href="#soc" class="btn btn--ghost magnetic"><span>Ver SOC en vivo</span></a>
+    </div>
+  </div>
+  <aside class="hero__term glass mono" aria-label="Consola de ejemplo (simulada)">
+    <div class="term__bar"><i></i><i></i><i></i><span>ciphera-soc ~ live (demo)</span></div>
+    <div class="term__body" id="hero-term"></div>
+  </aside>
+  <div class="hero__hud mono" aria-hidden="true">
+    <div><small>AMENAZAS BLOQUEADAS HOY</small><b id="hud-blocked">0</b></div>
+    <div><small>LATENCIA DETECCIÓN</small><b>0,8 s</b></div>
+    <div><small>ESTADO</small><b class="ok">PROTEGIDO</b></div>
+  </div>
+  <a href="#servicios" class="hero__scroll mono" aria-label="Desplazarse"><span></span>SCROLL</a>
+</section>
+
+<!-- MARQUEE -->
+<section class="marquee" aria-label="Tecnologías y marcos">
+  <div class="marquee__track">
+    <div class="marquee__row">
+      <span>ISO 27001</span><span>ENS</span><span>NIS2</span><span>RGPD</span><span>MITRE ATT&amp;CK</span><span>OWASP</span><span>Zero Trust</span><span>SIEM</span><span>EDR / XDR</span><span>SOAR</span><span>Threat Intel</span><span>Cloud Security</span><span>DORA</span>
+    </div>
+    <div class="marquee__row" aria-hidden="true">
+      <span>ISO 27001</span><span>ENS</span><span>NIS2</span><span>RGPD</span><span>MITRE ATT&amp;CK</span><span>OWASP</span><span>Zero Trust</span><span>SIEM</span><span>EDR / XDR</span><span>SOAR</span><span>Threat Intel</span><span>Cloud Security</span><span>DORA</span>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section class="section" id="servicios">
+  <header class="section__head">
+    <p class="eyebrow mono">// 01 — Servicios</p>
+    <h2 class="split">Seguridad ofensiva y defensiva en un solo equipo</h2>
+    <p class="section__lead reveal-up">Pensamos como atacantes para defender como nadie. Elige un servicio o déjanos cubrirlo todo.</p>
+  </header>
+  <div class="bento">
+    <article class="card card--xl tilt" data-icon="pentest">
+      <div class="card__glow"></div>
+      <div class="card__icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-5-5M8 11h6M11 8v6"/></svg></div>
+      <h3>Auditorías y pentesting</h3>
+      <p>Hacking ético de aplicaciones web, APIs, redes internas, cloud y Red Team completo. Informe ejecutivo + técnico con plan de remediación priorizado.</p>
+      <div class="card__code mono" aria-hidden="true"><span class="c-dim">$</span> nmap -sV objetivo.local<br><span class="c-ok">22/tcp open ssh</span><br><span class="c-warn">445/tcp open smb  ⚠ CVE detectado</span><br><span class="c-dim">$</span> generar_informe --prioridad=crítica<span class="caret">▌</span></div>
+      <ul class="tags mono"><li>Web/API</li><li>Red Team</li><li>Cloud</li><li>OWASP</li></ul>
+    </article>
+    <article class="card card--tall tilt">
+      <div class="card__glow"></div>
+      <div class="card__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
+      <h3>SOC 24/7 y monitorización</h3>
+      <p>Analistas reales vigilando tu infraestructura día y noche con SIEM, threat intelligence y caza activa de amenazas.</p>
+      <div class="radar-mini" aria-hidden="true"><span></span><i style="--x:30%;--y:40%"></i><i style="--x:65%;--y:62%"></i><i style="--x:55%;--y:25%"></i></div>
+    </article>
+    <article class="card tilt">
+      <div class="card__glow"></div>
+      <div class="card__icon"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h8l-1 8 10-12h-8z"/></svg></div>
+      <h3>Respuesta a incidentes</h3>
+      <p>Contención en minutos, análisis forense y recuperación. Ransomware, fugas de datos o accesos indebidos.</p>
+      <p class="card__stat mono">&lt; 15 min <small>tiempo de respuesta</small></p>
+    </article>
+    <article class="card tilt">
+      <div class="card__glow"></div>
+      <div class="card__icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+      <h3>Endpoints y redes</h3>
+      <p>EDR/XDR gestionado, firewalls de nueva generación, segmentación y arquitectura Zero Trust.</p>
+    </article>
+    <article class="card tilt">
+      <div class="card__glow"></div>
+      <div class="card__icon"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z"/></svg></div>
+      <h3>Cumplimiento normativo</h3>
+      <p>Te acompañamos en RGPD, ENS, NIS2 e ISO 27001: gap analysis, políticas y preparación de auditorías.</p>
+    </article>
+    <article class="card card--wide tilt">
+      <div class="card__glow"></div>
+      <div class="card__icon"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M7 9v5c0 2 2.5 3 5 3s5-1 5-3V9"/></svg></div>
+      <h3>Formación y concienciación</h3>
+      <p>El 80% de los ataques empiezan por una persona. Campañas de phishing simulado, talleres y formación continua para toda la plantilla.</p>
+      <div class="phish mono" aria-hidden="true"><span>📧 “Factura pendiente urgente”</span><b>BLOQUEADO</b></div>
+    </article>
+  </div>
+</section>
+
+<!-- SOC LIVE -->
+<section class="section soc" id="soc">
+  <header class="section__head">
+    <p class="eyebrow mono">// 02 — Centro de operaciones</p>
+    <h2 class="split">Así se ve tu red mientras duermes</h2>
+    <p class="section__lead reveal-up">Visualización <strong>simulada con fines demostrativos</strong>: ataques interceptados en tiempo real por nuestro SOC.</p>
+  </header>
+  <div class="soc__grid">
+    <div class="soc__map glass">
+      <div class="soc__label mono"><span class="pulse-dot red"></span>MAPA DE AMENAZAS · DEMO</div>
+      <canvas id="threat-map" aria-label="Mapa de amenazas simulado"></canvas>
+      <div class="soc__legend mono"><span><i class="l-red"></i>Ataque</span><span><i class="l-blue"></i>Bloqueado</span><span><i class="l-white"></i>Nodo protegido</span></div>
+    </div>
+    <div class="soc__side">
+      <div class="radar glass" aria-hidden="true">
+        <div class="radar__sweep"></div>
+        <div class="radar__rings"></div>
+        <i class="blip" style="--x:30%;--y:35%;--d:0s"></i>
+        <i class="blip" style="--x:70%;--y:60%;--d:1.2s"></i>
+        <i class="blip" style="--x:45%;--y:75%;--d:2.4s"></i>
+        <i class="blip" style="--x:62%;--y:28%;--d:3.1s"></i>
+        <span class="radar__label mono">ESCANEO PERIMETRAL</span>
+      </div>
+      <div class="feed glass mono" aria-label="Registro de eventos simulado">
+        <div class="term__bar"><i></i><i></i><i></i><span>eventos.log (demo)</span></div>
+        <ul id="feed"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CIFRAS -->
+<section class="section stats">
+  <div class="stats__grid">
+    <div class="stat"><b class="counter" data-to="1200000" data-suffix="+">0</b><span>amenazas bloqueadas al año</span></div>
+    <div class="stat"><b class="counter" data-to="99.98" data-dec="2" data-suffix="%">0</b><span>disponibilidad del SOC</span></div>
+    <div class="stat"><b class="counter" data-to="15" data-prefix="&lt;" data-suffix=" min">0</b><span>tiempo medio de respuesta</span></div>
+    <div class="stat"><b class="counter" data-to="250" data-suffix="+">0</b><span>empresas protegidas</span></div>
+  </div>
+  <p class="note mono">* Cifras de ejemplo. Sustituir por datos reales.</p>
+</section>
+
+<!-- PROCESO (pinned horizontal) -->
+<section class="process" id="proceso">
+  <div class="process__pin">
+    <header class="process__head">
+      <p class="eyebrow mono">// 03 — Cómo trabajamos</p>
+      <h2>Del diagnóstico al <span class="grad">blindaje total</span></h2>
+      <div class="process__bar"><span></span></div>
+    </header>
+    <div class="process__track">
+      <article class="step glass"><span class="step__n mono">01</span><h3>Diagnóstico</h3><p>Analizamos tu superficie de ataque, activos críticos y nivel de madurez. Sin compromiso.</p><code class="mono">scan --scope=all</code></article>
+      <article class="step glass"><span class="step__n mono">02</span><h3>Ataque controlado</h3><p>Pentesting y simulación de adversarios reales para descubrir cada brecha antes que ellos.</p><code class="mono">exploit --ethical</code></article>
+      <article class="step glass"><span class="step__n mono">03</span><h3>Blindaje</h3><p>Corregimos vulnerabilidades, desplegamos EDR, segmentamos la red y aplicamos Zero Trust.</p><code class="mono">harden --zero-trust</code></article>
+      <article class="step glass"><span class="step__n mono">04</span><h3>Vigilancia 24/7</h3><p>Nuestro SOC monitoriza, caza amenazas y responde en minutos. Siempre.</p><code class="mono">soc --watch --forever</code></article>
+      <article class="step glass"><span class="step__n mono">05</span><h3>Mejora continua</h3><p>Informes mensuales, formación y revisión del cumplimiento normativo para ir siempre un paso por delante.</p><code class="mono">report --monthly</code></article>
+    </div>
+  </div>
+</section>
+
+<!-- CUMPLIMIENTO -->
+<section class="section" id="cumplimiento">
+  <header class="section__head">
+    <p class="eyebrow mono">// 04 — Cumplimiento normativo</p>
+    <h2 class="split">Normativa al día, sin dolores de cabeza</h2>
+  </header>
+  <div class="compliance">
+    <div class="badge tilt"><b>RGPD</b><span>Protección de datos personales</span></div>
+    <div class="badge tilt"><b>ENS</b><span>Esquema Nacional de Seguridad</span></div>
+    <div class="badge tilt"><b>NIS2</b><span>Directiva europea de ciberseguridad</span></div>
+    <div class="badge tilt"><b>ISO 27001</b><span>Gestión de seguridad de la información</span></div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="section testimonials">
+  <header class="section__head">
+    <p class="eyebrow mono">// 05 — Testimonios <small>(ejemplo)</small></p>
+    <h2 class="split">Confían en nosotros</h2>
+  </header>
+  <div class="tst">
+    <figure class="tst__card glass reveal-up"><blockquote>“Detectaron un intento de ransomware un sábado a las 3:00 y lo contuvieron antes de que nadie se enterase. Impagable.”</blockquote><figcaption><span class="avatar">LM</span><span><b>Laura M.</b><small>CTO · Empresa logística (ejemplo)</small></span></figcaption></figure>
+    <figure class="tst__card glass reveal-up"><blockquote>“Pasamos la certificación ENS a la primera gracias a su acompañamiento. Equipo técnico de altísimo nivel.”</blockquote><figcaption><span class="avatar">JR</span><span><b>Javier R.</b><small>Director IT · Sector público (ejemplo)</small></span></figcaption></figure>
+    <figure class="tst__card glass reveal-up"><blockquote>“El pentest encontró fallos que nadie había visto en años. Informe claro y soluciones aplicables al día siguiente.”</blockquote><figcaption><span class="avatar">AS</span><span><b>Ana S.</b><small>CISO · Fintech (ejemplo)</small></span></figcaption></figure>
+  </div>
+</section>
+
+<!-- CTA + CONTACTO -->
+<section class="section contact" id="contacto">
+  <div class="contact__wrap glass">
+    <div class="contact__info">
+      <p class="eyebrow mono">// 06 — Contacto</p>
+      <h2 class="split">¿Sabes cuántas puertas tiene abiertas tu empresa?</h2>
+      <p>Pide una <strong>auditoría inicial gratuita</strong> y te lo decimos en 48 h.</p>
+      <ul class="contact__list mono">
+        <li><span>EMERGENCIAS 24/7</span><a href="tel:+34900000000">+34 900 000 000</a></li>
+        <li><span>EMAIL</span><a href="mailto:hola@ciphera.example">hola@ciphera.example</a></li>
+        <li><span>OFICINA</span>Calle Ejemplo 123, Madrid</li>
+      </ul>
+      <p class="note mono">* Datos de contacto de ejemplo.</p>
+    </div>
+    <form class="form" id="contact-form" novalidate>
+      <div class="field"><input id="f-name" name="nombre" required placeholder=" " autocomplete="name"><label for="f-name">Nombre</label></div>
+      <div class="field"><input id="f-email" name="email" type="email" required placeholder=" " autocomplete="email"><label for="f-email">Email corporativo</label></div>
+      <div class="field"><input id="f-company" name="empresa" placeholder=" " autocomplete="organization"><label for="f-company">Empresa</label></div>
+      <div class="field"><select id="f-service" name="servicio"><option>Auditoría / Pentesting</option><option>SOC 24/7</option><option>Respuesta a incidentes (¡urgente!)</option><option>Endpoints y redes</option><option>Cumplimiento normativo</option><option>Formación</option></select><label for="f-service" class="static">Servicio</label></div>
+      <div class="field field--full"><textarea id="f-msg" name="mensaje" rows="4" placeholder=" "></textarea><label for="f-msg">Cuéntanos tu caso</label></div>
+      <label class="check"><input type="checkbox" required id="f-legal"> Acepto la política de privacidad</label>
+      <button type="submit" class="btn btn--full magnetic"><span>Enviar de forma cifrada</span><svg viewBox="0 0 24 24" width="18" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+      <p class="form__msg mono" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer__big" aria-hidden="true"><span class="scramble-hover" data-brand data-text="Ciphera">Ciphera</span></div>
+  <div class="footer__row">
+    <p>© <span id="year"></span> <span data-brand>Ciphera</span> · Ciberseguridad. Sitio de demostración.</p>
+    <nav aria-label="Legal"><a href="#">Aviso legal</a><a href="#">Privacidad</a><a href="#">Cookies</a></nav>
+    <p class="mono"><span class="pulse-dot"></span>Todos los sistemas operativos</p>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="js/main.js"></script>
+<script type="module" src="js/threatmap.js"></script>
+<script type="module" src="js/hero3d.js"></script>
+</body>
+</html>
