@@ -1,0 +1,14 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'>
+<defs><radialGradient id='bg' cx='50%' cy='45%' r='70%'><stop offset='0' stop-color='hsl(200 90% 22%)'/><stop offset='.55' stop-color='#050a18'/><stop offset='1' stop-color='#02040a'/></radialGradient>
+<linearGradient id='m' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#2a3550'/><stop offset='.5' stop-color='#0d1426'/><stop offset='1' stop-color='#1b2540'/></linearGradient>
+<linearGradient id='gold' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#ffe7a3'/><stop offset='1' stop-color='#b9862b'/></linearGradient>
+<linearGradient id='n' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='hsl(200 100% 70%)'/><stop offset='1' stop-color='hsl(220 100% 45%)'/></linearGradient>
+<filter id='glow' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='8' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter>
+<pattern id='grid' width='40' height='40' patternUnits='userSpaceOnUse'><path d='M40 0H0V40' fill='none' stroke='hsl(200 100% 60%)' stroke-opacity='.08'/></pattern></defs>
+
+<ellipse cx='400' cy='500' rx='230' ry='26' fill='hsl(200 100% 60%)' opacity='.18' filter='url(#glow)'/>
+<g transform='rotate(-18 400 300)'><rect x='330' y='120' width='140' height='330' rx='42' fill='url(#m)' stroke='hsl(200 100% 60%)' stroke-opacity='.6' stroke-width='2'/>
+<circle cx='400' cy='165' r='20' fill='#02040a' stroke='hsl(200 100% 60%)' stroke-opacity='.5'/><rect x='365' y='450' width='70' height='60' rx='8' fill='url(#gold)'/>
+<rect x='378' y='462' width='44' height='8' rx='3' fill='#7a5a1c'/><circle cx='400' cy='300' r='44' fill='#02040a' stroke='url(#gold)' stroke-width='5'/>
+<g filter='url(#glow)' fill='none' stroke='hsl(200 100% 70%)' stroke-width='3' stroke-linecap='round'><path d='M378 300a22 22 0 0 1 44 0'/><path d='M386 312a14 14 0 0 1 28-12'/><path d='M370 290a32 32 0 0 1 60 2'/><path d='M396 318v-14'/></g>
+<text x='400' y='400' fill='hsl(200 100% 60%)' fill-opacity='.7' font-family='monospace' font-size='16' text-anchor='middle' letter-spacing='4'>FIDO2</text></g></svg>

@@ -1,15 +1,18 @@
-# Ciphera — Web de ciberseguridad (demo estática)
+# Ciphera Store — Tienda de ciberseguridad (demo estática)
 
-Abrir: servir la carpeta con cualquier servidor estático (p. ej. `python3 -m http.server 8080`) y visitar http://localhost:8080
-(los módulos JS requieren http://, no file://).
+Servir con cualquier servidor estático (`python3 -m http.server 8080`) y abrir http://localhost:8080
+(los módulos JS necesitan http://, no file://). Funciona en subrutas (GitHub Pages): todas las rutas son relativas.
 
 ## Renombrar la marca
-- `js/config.js` → `SITE.brand` (cambia todos los `[data-brand]`).
-- `index.html` → `<title>`, meta description, email `hola@ciphera.example`, y el texto "ciphera-soc" de la consola.
+- `js/config.js` → `SITE.brand` (se aplica a todos los `[data-brand]`, al título y al grabado de la llave 3D).
+- Email/teléfono de ejemplo en `index.html` (footer).
 
-## Contenido de ejemplo (sustituir)
-Teléfono, email, dirección, testimonios, cifras, mapa de amenazas y logs del SOC son SIMULADOS.
+## Catálogo
+`js/data.js`: productos, cursos y packs. TODO es contenido de ejemplo (precios, valoraciones, opiniones, instructor).
+
+## Checkout
+Solo demostración: no hay campos de pago ni envío de datos. Carrito y favoritos se guardan en localStorage.
 
 ## Dependencias (CDN)
-GSAP 3.12.5 + ScrollTrigger, Lenis 1.1.13, Three.js 0.160.0, Google Fonts (Space Grotesk, JetBrains Mono).
-El formulario es solo front-end (no envía nada): conectar a un backend/Formspree/etc.
+Three.js 0.160 (+ addons), GSAP 3.12.5 (ScrollTrigger, Flip), Lenis 1.1.13, Google Fonts.
+Sin WebGL o sin CDN de Three.js, el hero muestra una ilustración estática (img/key-fallback.svg).
